@@ -1,0 +1,49 @@
+[user]
+	name = Todd Hancock
+	email = thancock20@hotmail.com
+	username = thancock20
+	signingkey = 1A398FC4D6C60A4961531D847E94FF43DABFB79B
+[push]
+	default = matching
+[alias]
+	co = checkout
+[core]
+	autocrlf = input
+	safecrlf = true
+	editor = hx
+	pager = diff-so-fancy | less --tabs=4 -RFX
+[color "diff-highlight"]
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+[color]
+	ui = always
+[color "diff"]
+	meta = yellow bold
+	commit = green bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+[color "branch"]
+	current = yellow reverse
+	local = yellow
+	remote = green
+[color "status"]
+	added = yellow
+	changed = green
+	untracked = cyan
+[merge]
+	tool = meld
+	conflictstyle = diff3
+[mergetool]
+	prompt = false
+[rerere]
+	enabled = true
+[credential]
+	credentialStore = gpg
+	helper = 
+	helper = /usr/bin/git-credential-manager
+[credential "https://dev.azure.com"]
+	useHttpPath = true
