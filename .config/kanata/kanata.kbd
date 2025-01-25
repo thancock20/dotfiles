@@ -1,0 +1,366 @@
+(defcfg
+  linux-dev /dev/input/by-id/usb-Metadot_-_Das_Keyboard_Das_Keyboard-event-kbd
+  danger-enable-cmd yes
+  log-layer-changes no
+)
+
+(deflocalkeys-linux
+  LK_CAPS 500
+  LK_KOR 501
+  LK_JPN 502
+  LK_GRK 503
+)
+
+(defsrc
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        ssrq slck pause
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  ins  home pgup  nlck kp/  kp*  kp-
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \     del  end  pgdn  kp7  kp8  kp9  kp+
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret                        kp4  kp5  kp6
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft                 up         kp1  kp2  kp3  kprt
+  lctl lmet lalt           spc            ralt rmet cmp  rctl            left down rght  kp0  kp.
+)
+
+(defvar
+  left-hand-keys (
+    q w e r t
+    a s d f g
+    z x c v b
+  )
+  right-hand-keys (
+    y u i o p
+    h j k l ;
+    n m , . /
+  )
+)
+
+(defvirtualkeys
+  capslock nop0
+  imek nop1
+  imej nop2
+  imeg nop3
+  imer nop4
+
+  caps-on (switch
+    ((input virtual capslock)) XX break
+    () (multi caps (on-press press-vkey capslock)) break
+  )
+
+
+  caps-off (switch
+    ((input virtual capslock)) (multi caps (on-press release-vkey capslock)) break
+    () XX break
+  )
+
+  ime-next (macro M-A-C-;)
+
+  ime-e2k (switch
+    ((input virtual imek) (input virtual imej) (input virtual imeg)) XX break
+    () (multi (on-press tap-vkey ime-next) (on-press press-vkey imek)) break
+  )
+
+  ime-k2j (switch
+    ((input virtual imek)) (multi (on-press tap-vkey ime-next) (on-press release-vkey imek) (on-press press-vkey imej)) break
+    () XX break
+  )
+
+  ime-j2g (switch
+    ((input virtual imej)) (multi (on-press tap-vkey ime-next) (on-press release-vkey imej) (on-press press-vkey imeg)) break
+    () XX break
+  )
+
+  ime-g2r (switch
+    ((input virtual imeg)) (multi (on-press tap-vkey ime-next) (on-press release-vkey imeg) (on-press press-vkey imer)) break
+    () XX break
+  )
+
+  ime-r2e (switch
+    ((input virtual imer)) (multi (on-press tap-vkey ime-next) (on-press release-vkey imer)) break
+    () XX break
+  )
+
+  korean (macro (on-press tap-vkey ime-j2g) 20 (on-press tap-vkey ime-g2r) 20 (on-press tap-vkey ime-r2e) 20 (on-press tap-vkey ime-e2k))
+  japanese (macro (on-press tap-vkey ime-g2r) 20 (on-press tap-vkey ime-r2e) 20 (on-press tap-vkey ime-e2k) 20 (on-press tap-vkey ime-k2j))
+  greek (macro (on-press tap-vkey ime-r2e) 20 (on-press tap-vkey ime-e2k) 20 (on-press tap-vkey ime-k2j) 20 (on-press tap-vkey ime-j2g))
+  russian (macro (on-press tap-vkey ime-e2k) 20 (on-press tap-vkey ime-k2j) 20 (on-press tap-vkey ime-j2g) 20 (on-press tap-vkey ime-g2r))
+  english (macro (on-press tap-vkey ime-k2j) 20 (on-press tap-vkey ime-j2g) 20 (on-press tap-vkey ime-g2r) 20 (on-press tap-vkey ime-r2e))
+
+  to-base (layer-switch base)
+)
+
+(deftemplate alt-tap-hold (tap-action hold-action keys)
+  (tap-hold-release-keys 200 280
+    (switch
+      ((input virtual imek) (input virtual imej) (input virtual imeg) (input virtual imer)) $tap-action break
+      () (multi $tap-action @tap) break
+    )
+    $hold-action
+    $keys
+  )
+)
+
+(defalias
+  tap (multi
+    (layer-switch typewriter)
+    (on-idle 20 tap-vkey to-base))
+
+    gst (tap-dance 200 (slck (layer-switch guest-mode)))
+
+    ma (t! alt-tap-hold a lmet $left-hand-keys)
+    as (t! alt-tap-hold s lalt $left-hand-keys)
+    sd (t! alt-tap-hold d lsft $left-hand-keys)
+    cf (t! alt-tap-hold f lctl $left-hand-keys)
+
+    cj (t! alt-tap-hold j rctl $right-hand-keys)
+    sk (t! alt-tap-hold k rsft $right-hand-keys)
+    al (t! alt-tap-hold l lalt $right-hand-keys)
+    m; (t! alt-tap-hold ; rmet $right-hand-keys)
+
+    em (tap-hold-press 200 280 esc (layer-toggle motion))
+    mc (t! alt-tap-hold e (layer-toggle mousecontrol) $left-hand-keys)
+    wm (t! alt-tap-hold w (layer-toggle winman) $left-hand-keys)
+    tk (t! alt-tap-hold t (layer-toggle tenkey) $left-hand-keys)
+    rf (t! alt-tap-hold r (layer-toggle funckeys) $left-hand-keys)
+    vm (t! alt-tap-hold v (layer-toggle media) $left-hand-keys)
+
+    lp (t! alt-tap-hold (macro S-9) lsft $left-hand-keys)
+    rp (t! alt-tap-hold (macro S-0) rsft $right-hand-keys)
+    qc (tap-dance 250 (q (caps-word 2000)))
+    mn (layer-switch menu)
+
+    alt (switch
+      ((input virtual imeg)) ralt break
+      () lalt break
+    )
+)
+
+(deflayer base
+  esc  f1    f2    f3    f4  f5  f6  f7    f8    f9    f10  f11  f12        ssrq @gst pause
+  grv  1     2     3     4   5   6   7     8     9     0    -    =    bspc  ins  home pgup  nlck kp/  kp*  kp-
+  tab  @qc   @wm   @mc   @rf @tk y   u     i     o     p    [    ]    \     del  end  pgdn  kp7  kp8  kp9  kp+
+  @em  @ma   @as   @sd   @cf g   h   @cj   @sk   @al   @m;  '    ret                        kp4  kp5  kp6
+  @lp  z     x     c     @vm b   n   m     ,     .     /    @rp                  up         kp1  kp2  kp3  kprt
+  lctl lmet  @alt            spc           @mn   rmet  cmp  rctl            left down rght  kp0  kp.
+)
+
+(defalias
+ sck (tap-dance 200 (slck (layer-switch base)))
+)
+
+(deflayer guest-mode
+  esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12        ssrq @sck pause
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc  ins  home pgup  nlck kp/  kp*  kp-
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \     del  end  pgdn  kp7  kp8  kp9  kp+
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret                        kp4  kp5  kp6
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft                 up         kp1  kp2  kp3  kprt
+  lctl lmet lalt           spc            ralt rmet cmp  rctl            left down rght  kp0  kp.
+)
+
+(defalias
+  xlt (switch
+    ((input virtual imeg)) ralt break
+    () XX break
+  )
+)
+
+(deflayer tenkey
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   @xlt lsft XX   ]    7    8    9    -    grv  XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   [    4    5    6    kp+  =    XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   \    1    2    3    /    XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             0              XX   XX   XX   XX              XX   XX   XX    XX   XX  
+)
+
+(defalias
+  mmu (movemouse-up 3 1)
+  mmd (movemouse-down 3 1)
+  mml (movemouse-left 3 1)
+  mmr (movemouse-right 3 1)
+  mwu (mwheel-up 100 120)
+  mwd (mwheel-down 100 120)
+  mwl (mwheel-left 100 120)
+  mwr (mwheel-right 100 120)
+  fm (macro M-C-A-S-h 5 esc)
+  mme (tap-dance 200 (C-\ C-S-\))
+  c\ C-\
+  mjl (layer-toggle mousejumpl)
+)
+
+(deflayer mousecontrol
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   lsft XX   mlft XX   XX   mlft mmid mrgt XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  @mjl XX   lalt XX   lctl XX   @mml @mmd @mmu @mmr @fm  XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   @mwl @mwd @mwu @mwr @mme XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX
+)
+
+(defalias
+  jl1 (cmd bash -c "echo mouseto .084 .167 | dotool")
+  jl2 (cmd bash -c "echo mouseto .25 .167 | dotool")
+  jl3 (cmd bash -c "echo mouseto .416 .167 | dotool")
+  jl4 (cmd bash -c "echo mouseto .084 .5 | dotool")
+  jl5 (cmd bash -c "echo mouseto .25 .5 | dotool")
+  jl6 (cmd bash -c "echo mouseto .416 .5 | dotool")
+  jl7 (cmd bash -c "echo mouseto .084 .833 | dotool")
+  jl8 (cmd bash -c "echo mouseto .25 .833 | dotool")
+  jl9 (cmd bash -c "echo mouseto .416 .833 | dotool")
+
+  jr1 (cmd bash -c "echo mouseto .584 .167 | dotool")
+  jr2 (cmd bash -c "echo mouseto .75 .167 | dotool")
+  jr3 (cmd bash -c "echo mouseto .916 .167 | dotool")
+  jr4 (cmd bash -c "echo mouseto .584 .5 | dotool")
+  jr5 (cmd bash -c "echo mouseto .75 .5 | dotool")
+  jr6 (cmd bash -c "echo mouseto .916 .5 | dotool")
+  jr7 (cmd bash -c "echo mouseto .584 .833 | dotool")
+  jr8 (cmd bash -c "echo mouseto .75 .833 | dotool")
+  jr9 (cmd bash -c "echo mouseto .916 .833 | dotool")
+
+  bn (cmd bash -c "echo mouseto 1 .5 | dotool")
+  mjr (layer-toggle mousejumpr)
+)
+
+(deflayer mousejumpl
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   @mjr XX   XX   @jl1 @jl2 @jl3 XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   @jl4 @jl5 @jl6 @bn  XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   @jl7 @jl8 @jl9 XX   XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX
+)
+
+(deflayer mousejumpr
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   @jr1 @jr2 @jr3 XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   @jr4 @jr5 @jr6 @bn  XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   @jr7 @jr8 @jr9 XX   XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX
+)
+
+(defalias
+  lt left
+  dn down
+  rt rght
+
+  hm home
+  pu pgup
+  pd pgdn
+
+  csb C-bspc
+  cdl C-del
+
+  m2 (layer-toggle motion2)
+)
+
+(deflayer motion
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   ins  XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   @m2  XX   @lt  @dn  up   @rt  XX   XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   bspc del  XX   XX   XX   XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX
+)
+
+(deflayer motion2
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   @hm  @pd  @pu  end  XX   XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   @csb @cdl XX   XX   XX   XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX  
+)
+
+(defalias
+  cd M-C-S-down
+  ss M-C-S-left
+  wd M-C-S-up
+  ws M-C-S-rght
+  ad M-C-=
+  min M-pgdn
+  max M-pgup
+  ps pause
+  gtd M-C-/
+  ff M-C-f
+)
+
+(deflayer winman
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   alt  lsft XX   XX   XX   @ad  @ff  @ps  XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   @ss  @cd  @wd  @ws  XX   XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   tab  @min @max XX   @gtd XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX  
+)
+
+(deflayer media
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   pp   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   prev vold volu next XX   XX   XX                         XX   XX   XX
+  XX   XX   XX   lsft XX   XX   XX   mute XX   XX   XX   XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX
+)
+
+(defalias
+  kor (macro (on-press tap-vkey korean) 20 (on-press tap-vkey to-base))
+  jap (macro (on-press tap-vkey japanese) 20 (on-press tap-vkey to-base))
+  grk (macro (on-press tap-vkey greek) 20 (on-press tap-vkey to-base))
+  rus (macro (on-press tap-vkey russian) 20 (on-press tap-vkey to-base))
+  cap (macro (on-press tap-vkey caps-on) 20 (on-press tap-vkey to-base))
+  ba (macro (on-press tap-vkey english) 20 (on-press tap-vkey caps-off) 20 (on-press tap-vkey to-base))
+  tw (layer-switch typewriter)
+)
+
+(deflayer menu
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   @rus @tw  XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  @cap XX   XX   XX   XX   @grk XX   @jap @kor XX   XX   XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             @ba  XX   XX   XX              XX   XX   XX    XX   XX
+)
+
+(deflayer typewriter
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    XX    XX   XX   XX    XX   XX   XX   XX
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    XX    XX   XX   XX    XX   XX   XX   XX
+  XX   a    s    d    f    g    h    j    k    l    ;    '    ret                        XX   XX   XX
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft                 XX         XX   XX   XX   XX
+  XX   XX   XX             spc            @mn  XX   XX   XX              XX   XX   XX    XX   XX  
+)
+
+(deflayer funckeys
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   lctl XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   lmet lalt lsft XX   XX   XX   f7   f8   f9   f12  XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   lctl XX   XX   XX   f4   f5   f6   f11  XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   f1   f2   f3   f10  XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX
+)
+
+(defvirtualkeys
+    Firefox (layer-toggle firefox)
+    Emacs (layer-toggle emacs)
+)
+
+(deflayermap (firefox)
+    _ _
+)
+
+(deflayermap (emacs)
+    _ _
+)
+
+#| --------------------------------------------------------------------------
+
+(deflayer name
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX   XX   XX    XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX                         XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX                   XX         XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX   XX              XX   XX   XX    XX   XX  
+)
+
+  -------------------------------------------------------------------------- |#
